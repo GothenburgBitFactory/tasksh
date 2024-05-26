@@ -69,12 +69,14 @@ static unsigned int getWidth ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+static const std::string taskBin = std::getenv("TASKBIN") ? std::getenv("TASKBIN") : "task";
+
 static void editTask (const std::string& uuid)
 {
-  std::string command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " edit";
+  std::string command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " edit";
   system (command.c_str ());
 
-  command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " modify reviewed:now";
+  command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " modify reviewed:now";
   system (command.c_str ());
   std::cout << "Modified.\n\n\n\n";
 }
@@ -90,7 +92,7 @@ static void modifyTask (const std::string& uuid)
   }
   while (modifications == "");
 
-  std::string command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " modify " + modifications;
+  std::string command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " modify " + modifications;
   system (command.c_str ());
 
   std::cout << "Modified.\n\n\n\n";
@@ -99,7 +101,7 @@ static void modifyTask (const std::string& uuid)
 ////////////////////////////////////////////////////////////////////////////////
 static void reviewTask (const std::string& uuid)
 {
-  std::string command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " modify reviewed:now";
+  std::string command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " modify reviewed:now";
   system (command.c_str ());
   std::cout << "Marked as reviewed.\n\n\n\n";
 }
@@ -107,7 +109,7 @@ static void reviewTask (const std::string& uuid)
 ////////////////////////////////////////////////////////////////////////////////
 static void completeTask (const std::string& uuid)
 {
-  std::string command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " done";
+  std::string command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " done";
   system (command.c_str ());
   std::cout << "Completed.\n\n\n\n";
 }
@@ -115,7 +117,7 @@ static void completeTask (const std::string& uuid)
 ////////////////////////////////////////////////////////////////////////////////
 static void deleteTask (const std::string& uuid)
 {
-  std::string command = "task rc.confirmation:no rc.verbose:nothing " + uuid + " delete";
+  std::string command = taskBin + " rc.confirmation:no rc.verbose:nothing " + uuid + " delete";
   system (command.c_str ());
   std::cout << "Deleted.\n\n\n\n";
 }
@@ -214,7 +216,7 @@ static void reviewLoop (const std::vector <std::string>& uuids, unsigned int lim
     // Display banner for this task.
     std::string dummy;
     std::string description;
-    execute ("task",
+    execute (taskBin,
              {"_get", uuid + ".description"},
              dummy,
              description);
@@ -227,7 +229,7 @@ static void reviewLoop (const std::vector <std::string>& uuids, unsigned int lim
       std::cout << banner (current + 1, total, width, Lexer::trimRight (description, "\n"));
 
       // Use 'system' to run the command and show the output.
-      std::string command = "task " + uuid + " information";
+      std::string command = taskBin + " " + uuid + " information";
       system (command.c_str ());
 
       // Display prompt, get input.
@@ -275,33 +277,33 @@ int cmdReview (const std::vector <std::string>& args, bool autoClear)
   // Configure 'reviewed' UDA, but only if necessary.
   std::string input;
   std::string output;
-  auto status = execute ("task", {"_get", "rc.uda.reviewed.type"}, input, output);
+  auto status = execute (taskBin, {"_get", "rc.uda.reviewed.type"}, input, output);
   if (status || output != "date\n")
   {
     if (confirm ("Tasksh needs to define a 'reviewed' UDA of type 'date' for all tasks.  Ok to proceed?"))
     {
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "uda.reviewed.type",  "date"},     input, output);
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "uda.reviewed.label", "Reviewed"}, input, output);
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "uda.reviewed.type",  "date"},     input, output);
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "uda.reviewed.label", "Reviewed"}, input, output);
     }
   }
 
   // Configure '_reviewed' report, but only if necessary.
-  status = execute ("task", {"_get", "rc.report._reviewed.columns"}, input, output);
+  status = execute (taskBin, {"_get", "rc.report._reviewed.columns"}, input, output);
   if (status || output != "uuid\n")
   {
     if (confirm ("Tasksh needs to define a '_reviewed' report to identify tasks needing review.  Ok to proceed?"))
     {
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.description",
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.description",
                         "Tasksh review report.  Adjust the filter to your needs."                                              }, input, output);
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.columns", "uuid"               }, input, output);
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.sort",    "reviewed+,modified+"}, input, output);
-      execute ("task", {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.filter",
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.columns", "uuid"               }, input, output);
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.sort",    "reviewed+,modified+"}, input, output);
+      execute (taskBin, {"rc.confirmation:no", "rc.verbose:nothing", "config", "report._reviewed.filter",
                         "( reviewed.none: or reviewed.before:now-6days ) and ( +PENDING or +WAITING )"                         }, input, output);
     }
   }
 
   // Obtain a list of UUIDs to review.
-  status = execute ("task",
+  status = execute (taskBin,
                     {
                       "rc.color=off",
                       "rc.detection=off",

@@ -94,6 +94,8 @@ const std::string getResponse (const std::string& prompt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+static const std::string taskBin = std::getenv("TASKBIN") ? std::getenv("TASKBIN") : "task";
+
 static int commandLoop (bool autoClear)
 {
   // Compose the prompt.
@@ -126,11 +128,11 @@ static int commandLoop (bool autoClear)
              args[0][0] == '!')                       status = cmdShell (args);
     else if (command != "")
     {
-      command = "task " + command;
+      command = taskBin + " " + command;
       std::cout << "[" << command << "]\n";
       system (command.c_str ());
 
-      // Deliberately ignoreѕ taskwarrior exit status, otherwise empty filters
+      // Deliberately ignores taskwarrior exit status, otherwise empty filters
       // cause the shell to terminate.
     }
   }
@@ -156,7 +158,7 @@ int main (int argc, const char** argv)
       bool autoClear = false;
       std::string input;
       std::string output;
-      execute ("task", {"_get", "rc.tasksh.autoclear"}, input, output);
+      execute (taskBin, {"_get", "rc.tasksh.autoclear"}, input, output);
       output = lowerCase (output);
       autoClear = (output == "true\n" ||
                    output == "1\n"    ||
